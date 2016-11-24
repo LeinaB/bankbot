@@ -37,7 +37,7 @@ namespace BankBot
                 else
                 {
                     userData.SetProperty<bool>("SentGreeting", true);
-                    await stateClient.BotState.SetConversationDataAsync(activity.ChannelId, activity.From.Id, userData);
+                    await stateClient.BotState.SetUserDataAsync(activity.ChannelId, activity.From.Id, userData);
                 }
 
                 Activity infoReply = activity.CreateReply(endOutput);
