@@ -121,9 +121,11 @@ namespace BankBot
 
                     "* **'currencies'** gives you a list of supported currencies.  \n\n " +
 
-                    "* **'xchange'** help.  \n\n " +
+                    "* **'base currency'** tells you which baseline currency you are converting against.  \n\n " +
 
-                    "* **'clear'** clears your current user data.  \n\n ";
+                    "* **'exchange'** followed by a currency will convert your **base currency** against it.  \n\n " +
+
+                    "* **'clear'** clears your current user data, such as logged base currencies.  \n\n ";
 
 
 
@@ -141,32 +143,75 @@ namespace BankBot
                     await stateClient.BotState.DeleteStateForUserAsync(activity.ChannelId, activity.From.Id);
                     isCurrencyRequest = false;
                 }
-                //set home currency
-                if (userMessage.Length > 17)
+
+                //currency list
+
+                if (userMessage.ToLower().Equals("currencies"))
                 {
-                    if (userMessage.ToLower().Substring(0, 17).Equals("set home currency"))
+
+                    endOutput = "**Supported Currencies**:" +
+
+                    " Below is the list of currencies I can calculate:\n\n " +
+
+                    "* **AUD**: Australian Dollars  \n\n " +
+
+                    "* **CAD**: Canadian Dollars  \n\n " +
+
+                    "* **CNY**: Chinese Yuan  \n\n " +
+
+                    "* **EUR**: Euro  \n\n " +
+
+                     "* **GBP**: British Pounds  \n\n " +
+
+                    "* **HKD**: Hong Kong Dollars  \n\n " +
+
+                    "* **INR**: Indian Rupee  \n\n " +
+
+                    "* **KRW**: South Korean Won  \n\n " +
+
+                    "* **JPY**: Japanese Yen  \n\n " +
+
+                     "* **NZD**: New Zealand Dollars  \n\n " +
+
+                     "* **USD**: US Dollars \n\n ";
+                    
+
+                    isCurrencyRequest = false;
+
+
+                }
+
+
+                //currency list
+
+
+
+                //set home currency
+                if (userMessage.Length > 8)
+                {
+                    if (userMessage.ToLower().Substring(0, 8).Equals("set base"))
                     {
-                        homeCurrency = userMessage.Substring(18);
+                        homeCurrency = userMessage.Substring(9);
                         userData.SetProperty<string>("HomeCurrency", homeCurrency);
                         await stateClient.BotState.SetUserDataAsync(activity.ChannelId, activity.From.Id, userData);
-                        endOutput = ($"Your home currency has been set to {homeCurrency}");
+                        endOutput = ($"Your base currency has been set to {homeCurrency}");
                         isCurrencyRequest = false;
                     }
                 }
                 //check current home currency
 
-                if (userMessage.ToLower().Equals("home currency"))
+                if (userMessage.ToLower().Equals("base currency"))
                 {
                     string homecurrency = userData.GetProperty<string>("HomeCurrency");
                     if (homecurrency == null)
                     {
-                        endOutput = "Your home currency is currently unassigned.";
+                        endOutput = "Your base currency is currently unassigned. You can assign a currency by typing 'set base *your currency here*'";
                         isCurrencyRequest = false;
 
                     }
                     else
                     {
-                        endOutput = ($"Your home currency is set to {homecurrency}");
+                        endOutput = ($"Your base currency is set to {homecurrency}");
                         activity.Text = homecurrency;
                         isCurrencyRequest = false;
                     }
@@ -232,7 +277,7 @@ namespace BankBot
                 {
                     //api things
 
-                  
+
                     //currency exchange test
                     if (userMessage.Length > 8)
                     {
@@ -242,7 +287,7 @@ namespace BankBot
                                 string homecurrency = userData.GetProperty<string>("HomeCurrency");
                                 if (homecurrency == null)
                                 {
-                                    errOutput = "Your home currency is currently unassigned.";
+                                    errOutput = "Your base currency is currently unassigned. You can assign a currency by typing 'set base *your currency here*'";
                                     Activity errorReply = activity.CreateReply(errOutput);
                                     await connector.Conversations.ReplyToActivityAsync(errorReply);
 
@@ -250,9 +295,9 @@ namespace BankBot
                                 }
                                 else
                                 {
-                                    endOutput = ($"Your home currency is set to {homecurrency}");
+                                    endOutput = ($"Your base currency is set to {homecurrency}");
                                     activity.Text = homecurrency;
-                                    
+
                                 }
                             }
 
@@ -271,18 +316,41 @@ namespace BankBot
                                 currencyResult = rootObject.rates.AUD + (" Australian Dollars");
                             if (toExchange.ToLower().Equals("cad"))
                                 currencyResult = rootObject.rates.CAD + (" Canadian Dollars");
+                            if (toExchange.ToLower().Equals("cny"))
+                                currencyResult = rootObject.rates.CNY + (" Chinese Yuan");
+                            if (toExchange.ToLower().Equals("eur"))
+                                currencyResult = rootObject.rates.EUR + (" Euros");
+                            if (toExchange.ToLower().Equals("hkd"))
+                                currencyResult = rootObject.rates.HKD + (" Hong Kong Dollars");
+                            if (toExchange.ToLower().Equals("inr"))
+                                currencyResult = rootObject.rates.INR + (" Indian Rupees");
+                            if (toExchange.ToLower().Equals("krw"))
+                                currencyResult = rootObject.rates.KRW + (" South Korean Won");
+                            if (toExchange.ToLower().Equals("jpy"))
+                                currencyResult = rootObject.rates.JPY + (" Japanese Yen");
                             if (toExchange.ToLower().Equals("nzd"))
                                 currencyResult = rootObject.rates.NZD + (" New Zealand Dollars");
                             if (toExchange.ToLower().Equals("gbp"))
-                                currencyResult = rootObject.rates.GBP + (" Griat Britian Pounds");
+                                currencyResult = rootObject.rates.GBP + (" British Pounds");
                             if (toExchange.ToLower().Equals("usd"))
                                 currencyResult = rootObject.rates.USD + (" US Dollars");
 
+                            if (currencyResult.Equals(""))
+
+                            {
+                                Activity noreply = activity.CreateReply("that currency isn't supported.");
+                            }
+                            
+                           
 
                             Activity reply = activity.CreateReply($"1 {activity.Text} is currently worth {currencyResult}.");
                             await connector.Conversations.ReplyToActivityAsync(reply);
 
                         }
+
+                        else {
+                            Activity noreply = activity.CreateReply("that currency isn't supported.");
+                    }
                     }
 
 
