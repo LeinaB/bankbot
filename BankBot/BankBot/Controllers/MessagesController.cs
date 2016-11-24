@@ -9,6 +9,7 @@ using Microsoft.Bot.Connector;
 using Newtonsoft.Json;
 using BankBot.Models;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace BankBot
 {
@@ -28,6 +29,7 @@ namespace BankBot
                 string userMessage = activity.Text;
                 bool isCurrencyRequest = true;
                 bool saidhello = false;
+                string currencyResult = null;
 
                 StateClient stateClient = activity.GetStateClient();
                 BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
@@ -38,7 +40,7 @@ namespace BankBot
                 //Greetings
 
                 string Greeter = "Hello for the first time!";
-               
+
 
 
                 if (userData.GetProperty<bool>("SentGreeting"))
@@ -56,9 +58,9 @@ namespace BankBot
                 }
 
                 if (saidhello == false)
-                { 
-                Activity greetReply = activity.CreateReply(Greeter);
-                await connector.Conversations.ReplyToActivityAsync(greetReply);
+                {
+                    Activity greetReply = activity.CreateReply(Greeter);
+                    await connector.Conversations.ReplyToActivityAsync(greetReply);
 
                     // card test
 
@@ -101,9 +103,11 @@ namespace BankBot
 
 
                 string endOutput = "Hello";
+                string errOutput = "Hello";
+                string homeCurrency = null;
 
                 //help tab
-              
+
                 if (userMessage.ToLower().Equals("help"))
                 {
 
@@ -119,11 +123,12 @@ namespace BankBot
 
                     "* **'xchange'** help.  \n\n " +
 
-                    "* **'clear'** clears your current user data.  \n\n " ;
+                    "* **'clear'** clears your current user data.  \n\n ";
 
 
 
                     isCurrencyRequest = false;
+                    
 
                 }
 
@@ -137,11 +142,11 @@ namespace BankBot
                     isCurrencyRequest = false;
                 }
                 //set home currency
-                if (userMessage.Length > 13)
+                if (userMessage.Length > 17)
                 {
-                    if (userMessage.ToLower().Substring(0, 13).Equals("home currency"))
+                    if (userMessage.ToLower().Substring(0, 17).Equals("set home currency"))
                     {
-                        string homeCurrency = userMessage.Substring(14);
+                        homeCurrency = userMessage.Substring(18);
                         userData.SetProperty<string>("HomeCurrency", homeCurrency);
                         await stateClient.BotState.SetUserDataAsync(activity.ChannelId, activity.From.Id, userData);
                         endOutput = ($"Your home currency has been set to {homeCurrency}");
@@ -150,7 +155,7 @@ namespace BankBot
                 }
                 //check current home currency
 
-                if (userMessage.ToLower().Equals("xchange home"))
+                if (userMessage.ToLower().Equals("home currency"))
                 {
                     string homecurrency = userData.GetProperty<string>("HomeCurrency");
                     if (homecurrency == null)
@@ -161,9 +166,16 @@ namespace BankBot
                     }
                     else
                     {
+                        endOutput = ($"Your home currency is set to {homecurrency}");
                         activity.Text = homecurrency;
+                        isCurrencyRequest = false;
                     }
                 }
+
+                string toExchange;
+
+          
+
                 // msa card test
 
                 if (userMessage.ToLower().Equals("info"))
@@ -203,63 +215,86 @@ namespace BankBot
 
                 }
 
+            
 
-
-
-
-                // if weather request
-                if (!isCurrencyRequest)
+                   
+                        // if request
+                        if (!isCurrencyRequest)
                 {
                     Activity infoReply = activity.CreateReply(endOutput);
                     await connector.Conversations.ReplyToActivityAsync(infoReply);
                 }
 
+                
+
+
                 else
                 {
-
                     //api things
 
-                    //if (userMessage.Length > 8)
-                    //{
-                    //    if (userMessage.ToLower().Substring(0, 8).Equals("xchange"))
-                    //    {
-                    //        string homeCurrency = userMessage.Substring(9);                         
-                    //        endOutput = ($"Your home currency has been set to {homeCurrency}");
-                    //        isCurrencyRequest = false;
-                    //    }
-                    //}
+                  
+                    //currency exchange test
+                    if (userMessage.Length > 8)
+                    {
+                        if (userMessage.ToLower().Substring(0, 8).Equals("exchange"))
+                        {
+                            {
+                                string homecurrency = userData.GetProperty<string>("HomeCurrency");
+                                if (homecurrency == null)
+                                {
+                                    errOutput = "Your home currency is currently unassigned.";
+                                    Activity errorReply = activity.CreateReply(errOutput);
+                                    await connector.Conversations.ReplyToActivityAsync(errorReply);
+
+
+                                }
+                                else
+                                {
+                                    endOutput = ($"Your home currency is set to {homecurrency}");
+                                    activity.Text = homecurrency;
+                                    
+                                }
+                            }
+
+                            //api things
+
+                            HttpClient client = new HttpClient();
+                            string x = await client.GetStringAsync(new Uri("http://api.fixer.io/latest?base=" + activity.Text));
+                            CurrencyObject.RootObject rootObject;
+                            rootObject = JsonConvert.DeserializeObject<CurrencyObject.RootObject>(x);
+
+                            toExchange = userMessage.Substring(9);
+
+                            if (toExchange.ToLower().Equals("usd"))
+                                currencyResult = rootObject.rates.USD + "dollars";
+
+
+                            Activity reply = activity.CreateReply($"Your total echanges to = {currencyResult}");
+                            await connector.Conversations.ReplyToActivityAsync(reply);
+
+                        }
+                    }
 
 
 
 
+                    //end fluff
 
 
-
-                    string baseCurrency = activity.Text; 
-
-                    HttpClient client = new HttpClient();
-                    string x = await client.GetStringAsync(new Uri("http://api.fixer.io/latest?base=" + baseCurrency));
-                    CurrencyObject.RootObject rootObject;
-                    rootObject = JsonConvert.DeserializeObject<CurrencyObject.RootObject>(x);
-
-                    string aus = rootObject.rates.AUD + "dollars";
-
-                    //reply to user
-
-                    Activity reply = activity.CreateReply($"Current AUS dollars = {aus}");
-                    await connector.Conversations.ReplyToActivityAsync(reply);
-                }
-            }
+                
+                        }
+                    }
 
 
-            else
-            {
-                HandleSystemMessage(activity);
-               
-            }
+                    else
+                    {
+                        HandleSystemMessage(activity);
+
+                    }
                     var response = Request.CreateResponse(HttpStatusCode.OK);
-                    return response; }
-
+                    return response;
+                }
+        
             
         
 
