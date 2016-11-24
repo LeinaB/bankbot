@@ -38,12 +38,14 @@ namespace BankBot
                 //Greetings
 
                 string Greeter = "Hello for the first time!";
+               
 
 
                 if (userData.GetProperty<bool>("SentGreeting"))
                 {
                     Greeter = "Hello Again";
                     saidhello = true;
+                    Activity repeatReply = activity.CreateReply(Greeter);
 
                 }
                 else
@@ -60,7 +62,7 @@ namespace BankBot
 
                     // card test
 
-                    Activity startReply = activity.CreateReply("Welcome!");
+                    Activity startReply = activity.CreateReply("I am ContosoBot, Contoso Bank's first account and currency exchange manager bot! Type 'help' for what I can do!");
                     startReply.Recipient = activity.From;
                     startReply.Type = "message";
                     startReply.Attachments = new List<Attachment>();
@@ -68,37 +70,31 @@ namespace BankBot
                     List<CardImage> startImages = new List<CardImage>();
                     startImages.Add(new CardImage(url: "http://orig15.deviantart.net/2f12/f/2016/328/c/9/contososmall_by_llamadoodle-dapj2n0.png"));
 
-                    //List<CardAction> startButtons = new List<CardAction>();
-                    //CardAction sButton = new CardAction()
-                    //{
-                    //    Value = "http://msa.ms",
-                    //    Type = "openUrl",
-                    //    Title = "MSA Website"
-                    //};
-                    //startButtons.Add(sButton);
-
-                    ThumbnailCard sCard = new ThumbnailCard()
+                    List<CardAction> startButtons = new List<CardAction>();
+                    CardAction sButton = new CardAction()
                     {
-                        Title = "Visit MSA",
-                        Subtitle = "The MSA Website is here",
-                        Images = startImages,
-                       // Buttons = startButtons
+                        Value = "http://msap2bankbot.azurewebsites.net/",
+                        Type = "openUrl",
+                        Title = "Visit Our Site"
                     };
+                    startButtons.Add(sButton);
+
+
+                    HeroCard sCard = new HeroCard()
+                    {
+                        Title = "Contoso Bank",
+                        Images = startImages,
+                        Buttons = startButtons,
+                        Subtitle = "Contoso Bank - Connecting the world, one cent at a time",
+                    };
+
                     Attachment sAttachment = sCard.ToAttachment();
                     startReply.Attachments.Add(sAttachment);
 
 
                     await connector.Conversations.SendToConversationAsync(startReply);
-
                     return Request.CreateResponse(HttpStatusCode.OK);
-
-                    //card test
                 }
-
-
-
-
-
 
                 // end greetings
 
