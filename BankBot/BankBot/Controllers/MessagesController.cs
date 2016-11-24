@@ -25,30 +25,56 @@ namespace BankBot
                 ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
 
                 string userMessage = activity.Text;
+                bool isCurrencyRequest = true;
+                bool saidhello = false;
 
                 StateClient stateClient = activity.GetStateClient();
                 BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
 
-                //hello checker
-                string endOutput = "Hello";
 
-               if (userData.GetProperty<bool>("SentGreeting"))
+
+
+                //Greetings
+
+                string Greeter = "Hello";
+
+
+                if (userData.GetProperty<bool>("SentGreeting"))
                 {
-                    endOutput = "Hello Again";
+                    Greeter = "Hello Again";
+                    saidhello = true;
+
                 }
                 else
                 {
                     userData.SetProperty<bool>("SentGreeting", true);
                     await stateClient.BotState.SetUserDataAsync(activity.ChannelId, activity.From.Id, userData);
+
                 }
-               //clearing data
-               if (userMessage.ToLower().Equals("clear"))
+
+                if (saidhello == false)
+                { 
+                Activity greetReply = activity.CreateReply(Greeter);
+                await connector.Conversations.ReplyToActivityAsync(greetReply); }
+                // end greetings
+
+
+
+                string endOutput = "Hello";
+
+
+
+
+
+                //clearing data
+                if (userMessage.ToLower().Equals("clear"))
                 {
                     endOutput = "User data has been cleared.";
                     await stateClient.BotState.DeleteStateForUserAsync(activity.ChannelId, activity.From.Id);
+                    isCurrencyRequest = false;
                 }
-               //set home currency
-               if (userMessage.Length > 13)
+                //set home currency
+                if (userMessage.Length > 13)
                 {
                     if (userMessage.ToLower().Substring(0, 12).Equals("set currency"))
                     {
@@ -56,6 +82,7 @@ namespace BankBot
                         userData.SetProperty<string>("HomeCurrency", homeCurrency);
                         await stateClient.BotState.SetUserDataAsync(activity.ChannelId, activity.From.Id, userData);
                         endOutput = ($"Your home currency has been set to {homeCurrency}");
+                        isCurrencyRequest = false;
                     }
                 }
                 //check current home currency
@@ -66,7 +93,8 @@ namespace BankBot
                     if (homecurrency == null)
                     {
                         endOutput = "Your home currency is currently unassigned.";
-                        
+                        isCurrencyRequest = false;
+
                     }
                     else
                     {
@@ -75,31 +103,46 @@ namespace BankBot
                 }
 
 
-                Activity infoReply = activity.CreateReply(endOutput);
-                await connector.Conversations.ReplyToActivityAsync(infoReply);
 
 
-      //api things
-                HttpClient client = new HttpClient();
-                string x = await client.GetStringAsync(new Uri("http://api.fixer.io/latest?base=" + activity.Text));
-                CurrencyObject.RootObject rootObject;
-                rootObject = JsonConvert.DeserializeObject<CurrencyObject.RootObject>(x);
 
-                string aus = rootObject.rates.AUD + "dollars";
+                if (!isCurrencyRequest)
+                {
+                    Activity infoReply = activity.CreateReply(endOutput);
+                    await connector.Conversations.ReplyToActivityAsync(infoReply);
+                }
 
-    //reply to user
-           
-                Activity reply = activity.CreateReply($"Current AUS dollars = {aus}");
-                await connector.Conversations.ReplyToActivityAsync(reply);
+                else
+                {
+
+                    //api things
+                    HttpClient client = new HttpClient();
+                    string x = await client.GetStringAsync(new Uri("http://api.fixer.io/latest?base=" + activity.Text));
+                    CurrencyObject.RootObject rootObject;
+                    rootObject = JsonConvert.DeserializeObject<CurrencyObject.RootObject>(x);
+
+                    string aus = rootObject.rates.AUD + "dollars";
+
+                    //reply to user
+
+                    Activity reply = activity.CreateReply($"Current AUS dollars = {aus}");
+                    await connector.Conversations.ReplyToActivityAsync(reply);
+                }
             }
+
+
             else
             {
                 HandleSystemMessage(activity);
+               
             }
-            var response = Request.CreateResponse(HttpStatusCode.OK);
-            return response;
-        }
+                    var response = Request.CreateResponse(HttpStatusCode.OK);
+                    return response; }
 
+            
+        
+
+        //the rest
         private Activity HandleSystemMessage(Activity message)
         {
             if (message.Type == ActivityTypes.DeleteUserData)
