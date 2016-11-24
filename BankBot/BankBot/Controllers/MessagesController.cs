@@ -23,6 +23,27 @@ namespace BankBot
             if (activity.Type == ActivityTypes.Message)
             {
                 ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+
+                StateClient stateClient = activity.GetStateClient();
+                BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
+
+                //hello checker
+                string endOutput = "Hello";
+
+               if (userData.GetProperty<bool>("SentGreeting"))
+                {
+                    endOutput = "Hello Again";
+                }
+                else
+                {
+                    userData.SetProperty<bool>("SentGreeting", true);
+                    await stateClient.BotState.SetConversationDataAsync(activity.ChannelId, activity.From.Id, userData);
+                }
+
+                Activity infoReply = activity.CreateReply(endOutput);
+                await connector.Conversations.ReplyToActivityAsync(infoReply);
+
+
                 //api things
                 HttpClient client = new HttpClient();
                 string x = await client.GetStringAsync(new Uri("http://api.fixer.io/latest?base=" + activity.Text));
