@@ -205,7 +205,7 @@ namespace BankBot
                     string homecurrency = userData.GetProperty<string>("HomeCurrency");
                     if (homecurrency == null)
                     {
-                        endOutput = "Your base currency is currently unassigned. You can assign a currency by typing 'set base *your currency here*'";
+                        endOutput = "Your base currency is currently unassigned. You can assign a currency by typing 'set base' followed by '*your currency here*'";
                         isCurrencyRequest = false;
 
                     }
@@ -361,7 +361,7 @@ namespace BankBot
                                 string homecurrency = userData.GetProperty<string>("HomeCurrency");
                                 if (homecurrency == null)
                                 {
-                                    errOutput = "Your base currency is currently unassigned. You can assign a currency by typing 'set base *your currency here*'";
+                                    errOutput = "Your base currency is currently unassigned. You can assign a currency by typing 'set base' followed by '*your currency here*'";
                                     Activity errorReply = activity.CreateReply(errOutput);
                                     await connector.Conversations.ReplyToActivityAsync(errorReply);
 
