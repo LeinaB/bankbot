@@ -37,7 +37,7 @@ namespace BankBot
 
                 //Greetings
 
-                string Greeter = "Hello";
+                string Greeter = "Hello for the first time!";
 
 
                 if (userData.GetProperty<bool>("SentGreeting"))
@@ -56,14 +56,64 @@ namespace BankBot
                 if (saidhello == false)
                 { 
                 Activity greetReply = activity.CreateReply(Greeter);
-                await connector.Conversations.ReplyToActivityAsync(greetReply); }
+                await connector.Conversations.ReplyToActivityAsync(greetReply);
+
+                    // card test
+
+                    Activity startReply = activity.CreateReply("Welcome!");
+                    startReply.Recipient = activity.From;
+                    startReply.Type = "message";
+                    startReply.Attachments = new List<Attachment>();
+
+                    List<CardImage> startImages = new List<CardImage>();
+                    startImages.Add(new CardImage(url: "http://orig15.deviantart.net/2f12/f/2016/328/c/9/contososmall_by_llamadoodle-dapj2n0.png"));
+
+                    //List<CardAction> startButtons = new List<CardAction>();
+                    //CardAction sButton = new CardAction()
+                    //{
+                    //    Value = "http://msa.ms",
+                    //    Type = "openUrl",
+                    //    Title = "MSA Website"
+                    //};
+                    //startButtons.Add(sButton);
+
+                    ThumbnailCard sCard = new ThumbnailCard()
+                    {
+                        Title = "Visit MSA",
+                        Subtitle = "The MSA Website is here",
+                        Images = startImages,
+                       // Buttons = startButtons
+                    };
+                    Attachment sAttachment = sCard.ToAttachment();
+                    startReply.Attachments.Add(sAttachment);
+
+
+                    await connector.Conversations.SendToConversationAsync(startReply);
+
+                    return Request.CreateResponse(HttpStatusCode.OK);
+
+                    //card test
+                }
+
+
+
+
+
+
                 // end greetings
 
 
 
                 string endOutput = "Hello";
 
-
+                //help tab
+              
+                if (userMessage.ToLower().Equals("help"))
+                {
+                    //things
+                    endOutput = "This is the *HELP* section. hello";
+                    isCurrencyRequest = false;
+                }
 
 
 
