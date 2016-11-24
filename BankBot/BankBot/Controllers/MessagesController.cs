@@ -24,6 +24,8 @@ namespace BankBot
             {
                 ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
 
+                string userMessage = activity.Text;
+
                 StateClient stateClient = activity.GetStateClient();
                 BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
 
@@ -39,12 +41,45 @@ namespace BankBot
                     userData.SetProperty<bool>("SentGreeting", true);
                     await stateClient.BotState.SetUserDataAsync(activity.ChannelId, activity.From.Id, userData);
                 }
+               //clearing data
+               if (userMessage.ToLower().Equals("clear"))
+                {
+                    endOutput = "User data has been cleared.";
+                    await stateClient.BotState.DeleteStateForUserAsync(activity.ChannelId, activity.From.Id);
+                }
+               //set home currency
+               if (userMessage.Length > 13)
+                {
+                    if (userMessage.ToLower().Substring(0, 12).Equals("set currency"))
+                    {
+                        string homeCurrency = userMessage.Substring(13);
+                        userData.SetProperty<string>("HomeCurrency", homeCurrency);
+                        await stateClient.BotState.SetUserDataAsync(activity.ChannelId, activity.From.Id, userData);
+                        endOutput = ($"Your home currency has been set to {homeCurrency}");
+                    }
+                }
+                //check current home currency
+
+                if (userMessage.ToLower().Equals("home"))
+                {
+                    string homecurrency = userData.GetProperty<string>("HomeCurrency");
+                    if (homecurrency == null)
+                    {
+                        endOutput = "Your home currency is currently unassigned.";
+                        
+                    }
+                    else
+                    {
+                        activity.Text = homecurrency;
+                    }
+                }
+
 
                 Activity infoReply = activity.CreateReply(endOutput);
                 await connector.Conversations.ReplyToActivityAsync(infoReply);
 
 
-                //api things
+      //api things
                 HttpClient client = new HttpClient();
                 string x = await client.GetStringAsync(new Uri("http://api.fixer.io/latest?base=" + activity.Text));
                 CurrencyObject.RootObject rootObject;
@@ -52,7 +87,7 @@ namespace BankBot
 
                 string aus = rootObject.rates.AUD + "dollars";
 
-                //reply to user
+    //reply to user
            
                 Activity reply = activity.CreateReply($"Current AUS dollars = {aus}");
                 await connector.Conversations.ReplyToActivityAsync(reply);
