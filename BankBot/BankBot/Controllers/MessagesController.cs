@@ -106,12 +106,24 @@ namespace BankBot
               
                 if (userMessage.ToLower().Equals("help"))
                 {
-                    //things
-                    endOutput = "This is the *HELP* section. hello";
+
+                    endOutput = "This is the **HELP** section." +
+
+                    " Below is the list of things I can do:\n\n " +
+
+                    "* **'help'** brings up this list.  \n\n " +
+
+                    "* **'info'** gives you a link to our website.  \n\n " +
+
+                    "* **'clear'** clears your current user data.  \n\n " ;
+
+
+
                     isCurrencyRequest = false;
+
                 }
 
-
+                //help tab
 
                 //clearing data
                 if (userMessage.ToLower().Equals("clear"))
@@ -123,9 +135,9 @@ namespace BankBot
                 //set home currency
                 if (userMessage.Length > 13)
                 {
-                    if (userMessage.ToLower().Substring(0, 12).Equals("set currency"))
+                    if (userMessage.ToLower().Substring(0, 13).Equals("home currency"))
                     {
-                        string homeCurrency = userMessage.Substring(13);
+                        string homeCurrency = userMessage.Substring(14);
                         userData.SetProperty<string>("HomeCurrency", homeCurrency);
                         await stateClient.BotState.SetUserDataAsync(activity.ChannelId, activity.From.Id, userData);
                         endOutput = ($"Your home currency has been set to {homeCurrency}");
@@ -134,7 +146,7 @@ namespace BankBot
                 }
                 //check current home currency
 
-                if (userMessage.ToLower().Equals("home"))
+                if (userMessage.ToLower().Equals("xchange home"))
                 {
                     string homecurrency = userData.GetProperty<string>("HomeCurrency");
                     if (homecurrency == null)
@@ -150,33 +162,39 @@ namespace BankBot
                 }
                 // msa card test
 
-                if (userMessage.ToLower().Equals("msa"))
+                if (userMessage.ToLower().Equals("info"))
                 {
-                    Activity replyToConversation = activity.CreateReply("MSA information");
-                    replyToConversation.Recipient = activity.From;
-                    replyToConversation.Type = "message";
-                    replyToConversation.Attachments = new List<Attachment>();
-                    List<CardImage> cardImages = new List<CardImage>();
-                    cardImages.Add(new CardImage(url: "https://cdn2.iconfinder.com/data/icons/ios-7-style-metro-ui-icons/512/MetroUI_iCloud.png"));
-                    List<CardAction> cardButtons = new List<CardAction>();
-                    CardAction plButton = new CardAction()
-                    {
-                        Value = "http://msa.ms",
-                        Type = "openUrl",
-                        Title = "MSA Website"
-                    };
-                    cardButtons.Add(plButton);
-                    ThumbnailCard plCard = new ThumbnailCard()
-                    {
-                        Title = "Visit MSA",
-                        Subtitle = "The MSA Website is here",
-                        Images = cardImages,
-                        Buttons = cardButtons
-                    };
-                    Attachment plAttachment = plCard.ToAttachment();
-                    replyToConversation.Attachments.Add(plAttachment);
-                    await connector.Conversations.SendToConversationAsync(replyToConversation);
+                    Activity startReply = activity.CreateReply("I am ContosoBot, Contoso Bank's first account and currency exchange manager bot! Type 'help' for what I can do!");
+                    startReply.Recipient = activity.From;
+                    startReply.Type = "message";
+                    startReply.Attachments = new List<Attachment>();
 
+                    List<CardImage> startImages = new List<CardImage>();
+                    startImages.Add(new CardImage(url: "http://orig15.deviantart.net/2f12/f/2016/328/c/9/contososmall_by_llamadoodle-dapj2n0.png"));
+
+                    List<CardAction> startButtons = new List<CardAction>();
+                    CardAction sButton = new CardAction()
+                    {
+                        Value = "http://msap2bankbot.azurewebsites.net/",
+                        Type = "openUrl",
+                        Title = "Visit Our Site"
+                    };
+                    startButtons.Add(sButton);
+
+
+                    HeroCard sCard = new HeroCard()
+                    {
+                        Title = "Contoso Bank",
+                        Images = startImages,
+                        Buttons = startButtons,
+                        Subtitle = "Contoso Bank - Connecting the world, one cent at a time",
+                    };
+
+                    Attachment sAttachment = sCard.ToAttachment();
+                    startReply.Attachments.Add(sAttachment);
+
+
+                    await connector.Conversations.SendToConversationAsync(startReply);
                     return Request.CreateResponse(HttpStatusCode.OK);
 
                 }
@@ -196,8 +214,27 @@ namespace BankBot
                 {
 
                     //api things
+
+                    //if (userMessage.Length > 8)
+                    //{
+                    //    if (userMessage.ToLower().Substring(0, 8).Equals("xchange"))
+                    //    {
+                    //        string homeCurrency = userMessage.Substring(9);                         
+                    //        endOutput = ($"Your home currency has been set to {homeCurrency}");
+                    //        isCurrencyRequest = false;
+                    //    }
+                    //}
+
+
+
+
+
+
+
+                    string baseCurrency = activity.Text; 
+
                     HttpClient client = new HttpClient();
-                    string x = await client.GetStringAsync(new Uri("http://api.fixer.io/latest?base=" + activity.Text));
+                    string x = await client.GetStringAsync(new Uri("http://api.fixer.io/latest?base=" + baseCurrency));
                     CurrencyObject.RootObject rootObject;
                     rootObject = JsonConvert.DeserializeObject<CurrencyObject.RootObject>(x);
 
