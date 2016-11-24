@@ -115,6 +115,8 @@ namespace BankBot
 
                     "* **'info'** gives you a link to our website.  \n\n " +
 
+                    "* **'currencies'** gives you a list of supported currencies.  \n\n " +
+
                     "* **'clear'** clears your current user data.  \n\n " ;
 
 
