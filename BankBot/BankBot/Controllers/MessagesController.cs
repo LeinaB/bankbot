@@ -117,6 +117,8 @@ namespace BankBot
 
                     "* **'currencies'** gives you a list of supported currencies.  \n\n " +
 
+                    "* **'xchange'** help.  \n\n " +
+
                     "* **'clear'** clears your current user data.  \n\n " ;
 
 
