@@ -217,7 +217,12 @@ namespace BankBot
                     }
                 }
 
+                //declaring some strings
+
                 string toExchange;
+                string intPlaceholder;
+                string resultString;
+                int exchangeAmount;
 
           
 
@@ -262,26 +267,75 @@ namespace BankBot
 
                 //DATABASE STUFF
 
-                if (userMessage.ToLower().Equals("get timelines"))
+                if (userMessage.ToLower().Equals("get history"))
                 {
-                    List<Timeline> timelines = await AzureManager.AzureManagerInstance.GetTimelines();
+                    List<Bankdetails> bankdetails = await AzureManager.AzureManagerInstance.GetBanks();
                     endOutput = "";
-                    foreach (Timeline t in timelines)
+                    foreach (Bankdetails t in bankdetails)
                     {
-                        endOutput += "name " + t.userName + ", Balance " + t.balance + "\n\n";
+                        endOutput += "[" + t.Date + "]\n\n" +
+                            "**Currency:** " + t.currency + ", **Converted Amount:** " + t.amount + ", **Converted To:** " + t.converted + ", **Totalling:** " + t.result + ".\n\n";
+
+                        //START CARD
+
+                        //Activity startReply = activity.CreateReply("Your Transaction History");
+                        //startReply.Recipient = activity.From;
+                        //startReply.Type = "message";
+                        //startReply.Attachments = new List<Attachment>();
+
+                        //HeroCard sCard = new HeroCard()
+                        //{
+                        //    Subtitle = endOutput +="Currency: " + t.currency + ", amount: " + t.amount,
+                        //};
+
+                        //Attachment sAttachment = sCard.ToAttachment();
+                        //startReply.Attachments.Add(sAttachment);
+
+
+                        //await connector.Conversations.SendToConversationAsync(startReply);
+                        //return Request.CreateResponse(HttpStatusCode.OK);
+
+                        //END CARD
+
                     }
+
                     isCurrencyRequest = false;
 
                 }
 
+                //UPDATE
+
+                //if  (userMessage.Length > 8)
+                //    { }
+                //        if (userMessage.ToLower().Substring(0, 8).Equals("new log"))
+                //{
+                //    string homecurrency = userData.GetProperty<string>("HomeCurrency");
+                //    string enteredamount = userMessage.Substring(9);
+
+                //    int loggedamount;
+                //    if (Int32.TryParse(($"{enteredamount}"), out loggedamount));
+              
+                //    Bankdetails bankdetails = new Bankdetails()
+                //    {
+                //        currency = homecurrency,
+                //        amount = loggedamount,
+                        
+                //    };
+
+                //    await AzureManager.AzureManagerInstance.addBank(bankdetails);
+
+                //   // isCurrencyRequest = false;
+
+                //    endOutput = "New entry added";
+                //}
+                        //END UPDATE
 
 
 
 
 
 
-
-
+                //WHOA
 
                 // if request
                 if (!isCurrencyRequest)
@@ -328,32 +382,42 @@ namespace BankBot
                             CurrencyObject.RootObject rootObject;
                             rootObject = JsonConvert.DeserializeObject<CurrencyObject.RootObject>(x);
 
-                            toExchange = userMessage.Substring(9);
+                            //splitting query
+                            string exchangePrompt = ($"{userMessage}");
+                            string[] arr = exchangePrompt.Split(' ');
+
+                            toExchange = arr[1];
+                            intPlaceholder = arr[2];
+
+                            //setting exchange amount
+                    
+                            resultString = Regex.Match(intPlaceholder, @"\d+").Value;
+                            exchangeAmount = Int32.Parse(resultString);
 
                             //convert to array maybe?
 
                             if (toExchange.ToLower().Equals("aud"))
-                                currencyResult = rootObject.rates.AUD + (" Australian Dollars");
+                                currencyResult = rootObject.rates.AUD * exchangeAmount + (" Australian Dollars");
                             if (toExchange.ToLower().Equals("cad"))
-                                currencyResult = rootObject.rates.CAD + (" Canadian Dollars");
+                                currencyResult = rootObject.rates.CAD * exchangeAmount + (" Canadian Dollars");
                             if (toExchange.ToLower().Equals("cny"))
-                                currencyResult = rootObject.rates.CNY + (" Chinese Yuan");
+                                currencyResult = rootObject.rates.CNY * exchangeAmount + (" Chinese Yuan");
                             if (toExchange.ToLower().Equals("eur"))
-                                currencyResult = rootObject.rates.EUR + (" Euros");
+                                currencyResult = rootObject.rates.EUR * exchangeAmount + (" Euros");
                             if (toExchange.ToLower().Equals("hkd"))
-                                currencyResult = rootObject.rates.HKD + (" Hong Kong Dollars");
+                                currencyResult = rootObject.rates.HKD * exchangeAmount + (" Hong Kong Dollars");
                             if (toExchange.ToLower().Equals("inr"))
-                                currencyResult = rootObject.rates.INR + (" Indian Rupees");
+                                currencyResult = rootObject.rates.INR * exchangeAmount + (" Indian Rupees");
                             if (toExchange.ToLower().Equals("krw"))
-                                currencyResult = rootObject.rates.KRW + (" South Korean Won");
+                                currencyResult = rootObject.rates.KRW * exchangeAmount + (" South Korean Won");
                             if (toExchange.ToLower().Equals("jpy"))
-                                currencyResult = rootObject.rates.JPY + (" Japanese Yen");
+                                currencyResult = rootObject.rates.JPY * exchangeAmount + (" Japanese Yen");
                             if (toExchange.ToLower().Equals("nzd"))
-                                currencyResult = rootObject.rates.NZD + (" New Zealand Dollars");
+                                currencyResult = rootObject.rates.NZD * exchangeAmount + (" New Zealand Dollars");
                             if (toExchange.ToLower().Equals("gbp"))
-                                currencyResult = rootObject.rates.GBP + (" British Pounds");
+                                currencyResult = rootObject.rates.GBP * exchangeAmount + (" British Pounds");
                             if (toExchange.ToLower().Equals("usd"))
-                                currencyResult = rootObject.rates.USD + (" US Dollars");
+                                currencyResult = rootObject.rates.USD * exchangeAmount + (" US Dollars");
 
                             if (currencyResult.Equals(""))
 
@@ -363,8 +427,28 @@ namespace BankBot
                             
                            
 
-                            Activity reply = activity.CreateReply($"1 {activity.Text} is currently worth {currencyResult}.");
+                            Activity reply = activity.CreateReply($"{exchangeAmount} {activity.Text} is currently worth {currencyResult}.");
                             await connector.Conversations.ReplyToActivityAsync(reply);
+
+
+                            //updates to log
+                            
+                            Bankdetails bankdetails = new Bankdetails()
+                            {
+                                currency = activity.Text,
+                                amount = exchangeAmount,
+                                Date = DateTime.Now,
+                                converted = toExchange,
+                                result = currencyResult
+                            };
+
+                            await AzureManager.AzureManagerInstance.addBank(bankdetails);
+
+                            isCurrencyRequest = false;
+
+                            endOutput = "New timeline added [" + bankdetails.Date + "]";
+
+                            //updates to log
 
                         }
 

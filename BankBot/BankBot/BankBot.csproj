@@ -140,7 +140,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\Timeline.cs" />
+    <Compile Include="Models\Bankdetails.cs" />
     <Compile Include="Models\CurrencyObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
