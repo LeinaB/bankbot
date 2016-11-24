@@ -8,6 +8,7 @@ using System.Web.Http.Description;
 using Microsoft.Bot.Connector;
 using Newtonsoft.Json;
 using BankBot.Models;
+using System.Collections.Generic;
 
 namespace BankBot
 {
@@ -101,11 +102,44 @@ namespace BankBot
                         activity.Text = homecurrency;
                     }
                 }
+                // msa card test
+
+                if (userMessage.ToLower().Equals("msa"))
+                {
+                    Activity replyToConversation = activity.CreateReply("MSA information");
+                    replyToConversation.Recipient = activity.From;
+                    replyToConversation.Type = "message";
+                    replyToConversation.Attachments = new List<Attachment>();
+                    List<CardImage> cardImages = new List<CardImage>();
+                    cardImages.Add(new CardImage(url: "https://cdn2.iconfinder.com/data/icons/ios-7-style-metro-ui-icons/512/MetroUI_iCloud.png"));
+                    List<CardAction> cardButtons = new List<CardAction>();
+                    CardAction plButton = new CardAction()
+                    {
+                        Value = "http://msa.ms",
+                        Type = "openUrl",
+                        Title = "MSA Website"
+                    };
+                    cardButtons.Add(plButton);
+                    ThumbnailCard plCard = new ThumbnailCard()
+                    {
+                        Title = "Visit MSA",
+                        Subtitle = "The MSA Website is here",
+                        Images = cardImages,
+                        Buttons = cardButtons
+                    };
+                    Attachment plAttachment = plCard.ToAttachment();
+                    replyToConversation.Attachments.Add(plAttachment);
+                    await connector.Conversations.SendToConversationAsync(replyToConversation);
+
+                    return Request.CreateResponse(HttpStatusCode.OK);
+
+                }
 
 
 
 
 
+                // if weather request
                 if (!isCurrencyRequest)
                 {
                     Activity infoReply = activity.CreateReply(endOutput);
