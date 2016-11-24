@@ -123,7 +123,11 @@ namespace BankBot
 
                     "* **'base currency'** tells you which baseline currency you are converting against.  \n\n " +
 
-                    "* **'exchange'** followed by a currency will convert your **base currency** against it.  \n\n " +
+                    "* **'set base'** will let you switch your baseline currency.  \n\n " +
+
+                    "* **'exchange'** followed by a *currency*, then a *value* will convert your **base currency** against it.  \n\n " +
+
+                    "* **'get history'** will show you a record of your previous exchanges.  \n\n " +
 
                     "* **'clear'** clears your current user data, such as logged base currencies.  \n\n ";
 
