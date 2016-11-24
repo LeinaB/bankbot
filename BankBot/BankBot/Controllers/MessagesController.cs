@@ -265,11 +265,21 @@ namespace BankBot
 
                             toExchange = userMessage.Substring(9);
 
+                            //convert to array maybe?
+
+                            if (toExchange.ToLower().Equals("aud"))
+                                currencyResult = rootObject.rates.AUD + (" Australian Dollars");
+                            if (toExchange.ToLower().Equals("cad"))
+                                currencyResult = rootObject.rates.CAD + (" Canadian Dollars");
+                            if (toExchange.ToLower().Equals("nzd"))
+                                currencyResult = rootObject.rates.NZD + (" New Zealand Dollars");
+                            if (toExchange.ToLower().Equals("gbp"))
+                                currencyResult = rootObject.rates.GBP + (" Griat Britian Pounds");
                             if (toExchange.ToLower().Equals("usd"))
-                                currencyResult = rootObject.rates.USD + "dollars";
+                                currencyResult = rootObject.rates.USD + (" US Dollars");
 
 
-                            Activity reply = activity.CreateReply($"Your total echanges to = {currencyResult}");
+                            Activity reply = activity.CreateReply($"1 {activity.Text} is currently worth {currencyResult}.");
                             await connector.Conversations.ReplyToActivityAsync(reply);
 
                         }
