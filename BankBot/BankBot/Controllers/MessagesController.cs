@@ -260,11 +260,31 @@ namespace BankBot
 
                 }
 
-            
+                //DATABASE STUFF
 
-                   
-                        // if request
-                        if (!isCurrencyRequest)
+                if (userMessage.ToLower().Equals("get timelines"))
+                {
+                    List<Timeline> timelines = await AzureManager.AzureManagerInstance.GetTimelines();
+                    endOutput = "";
+                    foreach (Timeline t in timelines)
+                    {
+                        endOutput += "name " + t.userName + ", Balance " + t.balance + "\n\n";
+                    }
+                    isCurrencyRequest = false;
+
+                }
+
+
+
+
+
+
+
+
+
+
+                // if request
+                if (!isCurrencyRequest)
                 {
                     Activity infoReply = activity.CreateReply(endOutput);
                     await connector.Conversations.ReplyToActivityAsync(infoReply);
